@@ -1,0 +1,17 @@
+{
+  "name": "ynab-convert",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:Snikanes/ynab-convert.git",
+  "author": "Eirik Vikanes <eirik.vikanes@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "moment": "^2.18.1"
+  },
+  "devDependencies": {
+    "jest": "^21.1.0"
+  },
+  "scripts": {
+    "test": "jest ./test"
+  }
+}
