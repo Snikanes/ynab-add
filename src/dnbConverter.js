@@ -23,7 +23,7 @@ const getTransactions = async fileName => {
 
 const processTransaction = line => {
   const cleaned = line.replace(/["']/g, "")
-  return createTransaction(cleaned) 
+  return createTransaction(cleaned)
 }
 
 const createTransaction = line => {
@@ -35,9 +35,12 @@ const createTransaction = line => {
 }
 
 const formatAmount = numberString => {
-  return Number(numberString.replace(/[.]/g, "").split(',')[0])
+  const separatorsRemoved = numberString.replace(/[.]/g, "")
+  return Number(separatorsRemoved.replace(/[,]/g, "."))
 }
 
 module.exports = {
-    getTransactions
+    getTransactions,
+    processTransaction,
+    formatAmount
 }
