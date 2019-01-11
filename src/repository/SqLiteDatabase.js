@@ -7,9 +7,9 @@ const { promisify } = require("util");
  * A wrapper class around the sqlite3 modiule, providing promisified
  * querying methods
  *
- * @class SqlLiteDatabase
+ * @class SqLiteDatabase
  */
-class SqlLiteDatabase {
+class SqLiteDatabase {
   constructor(dbName = "ynab") {
     if (process.env.TEST) {
       this.db = new sqlite3.Database("ynab-test");
@@ -22,7 +22,7 @@ class SqlLiteDatabase {
    * Lists all tables in the database
    *
    * @returns A Promise resolving to a list of all the tables in the database
-   * @memberof SqlLiteDatabase
+   * @memberof SqLiteDatabase
    */
   async listTables() {
     return this.getAll(
@@ -35,7 +35,7 @@ class SqlLiteDatabase {
    * Any file ending in .sql is regarded as a migration script,
    * Scripts are applied in alphebetic order
    *
-   * @memberof SqlLiteDatabase
+   * @memberof SqLiteDatabase
    */
   async applyMigrationScripts(directory) {
     const files = fs.readdirSync(directory);
@@ -61,7 +61,7 @@ class SqlLiteDatabase {
    * @param {*} query The query to run
    * @param {*} [parameters=[]] The parameters to use in the query
    * @returns A Promise resolving to an object {lastID: <ID of last inserted>}
-   * @memberof SqlLiteDatabase
+   * @memberof SqLiteDatabase
    */
   async run(query, parameters = []) {
     const statement = this.db.prepare(query);
@@ -83,7 +83,7 @@ class SqlLiteDatabase {
    * @param {*} query The query to run
    * @param {*} [parameters=[]] The parameters to use in the query
    * @returns A Promise resolving to the first row that matches, null if result set is empty
-   * @memberof SqlLiteDatabase
+   * @memberof SqLiteDatabase
    */
   async getFirst(query, parameters = []) {
     const statement = this.db.prepare(query);
@@ -99,7 +99,7 @@ class SqlLiteDatabase {
    * @param {*} [parameters=[]] The parameters to use in the query
    * @returns A promise that resolves to a list containing all rows that match
    *          the query or an empty array if result set is empty
-   * @memberof SqlLiteDatabase
+   * @memberof SqLiteDatabase
    */
   async getAll(query, parameters = []) {
     const statement = this.db.prepare(query);
@@ -112,7 +112,7 @@ class SqlLiteDatabase {
    * Closes the database connection
    *
    * @returns A promise resolving once the database is closed
-   * @memberof SqlLiteDatabase
+   * @memberof SqLiteDatabase
    */
   async closeConnection() {
     return promisify(this.db.close).bind(this.db)();
@@ -132,12 +132,12 @@ class SqlLiteDatabase {
 let instance = null;
 const getInstance = dbName => {
   if (instance === null) {
-    instance = new SqlLiteDatabase(dbName);
+    instance = new SqLiteDatabase(dbName);
   }
   return instance;
 };
 
 module.exports = {
   getSqLiteInstance: dbName => getInstance(dbName),
-  SqlLiteDatabase
+  SqLiteDatabase
 };

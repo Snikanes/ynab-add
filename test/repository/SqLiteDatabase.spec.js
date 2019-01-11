@@ -1,8 +1,7 @@
 const path = require("path");
+const fs = require("fs");
 
-const {
-  getSqLiteInstance
-} = require("../../src/repository/SqlLiteDatabase.js");
+const { getSqLiteInstance } = require("../../src/repository/SqLiteDatabase");
 
 const testDbName = "batvett-test";
 const dbFilePath = path.resolve(__dirname, "..", "..", testDbName);
@@ -23,9 +22,14 @@ const removeDbFromFilesystem = path => {
   }
 };
 
+const insertTestPayees = async db => {
+  await db.run(`insert into payees(name) values('Test payee')`);
+  await db.run(`insert into payees(name) values('Test payee 2')`);
+};
+
 describe("SqLiteDatabase", () => {
   afterAll(async () => {
-    removeDbFromFilesystem(path.join(__dirname, "..", "..", testDbName));
+    removeDbFromFilesystem(dbFilePath);
   });
 
   beforeAll(() => {
@@ -52,7 +56,7 @@ describe("SqLiteDatabase", () => {
 
       const tables = await db.listTables();
 
-      expect(tables.length).toEqual(8);
+      expect(tables.length).toEqual(1);
     });
   });
 
@@ -62,9 +66,8 @@ describe("SqLiteDatabase", () => {
 
       const tables = await db.listTables();
 
-      expect(tables.length).toEqual(8);
-      expect(tables[0].name).toEqual("category");
-      expect(tables[tables.length - 1].name).toEqual("user");
+      expect(tables.length).toEqual(1);
+      expect(tables[0].name).toEqual("payees");
     });
   });
 
@@ -73,39 +76,38 @@ describe("SqLiteDatabase", () => {
       await db.applyMigrationScripts(migrationDirectory);
 
       const { lastID } = await db.run(
-        `insert into user(id, full_name, phone_number, has_accepted_terms_and_conditions, address, postal_code, postal_area, email)
-        values(4, 'Jonas Gunnarsen', 1412312, true, 'Voksenkollveien 114c', '0790', 'Oslo', 'test@test.no')`
+        `insert into payees(name) values('Test payee')`
       );
-      expect(lastID).toEqual(4);
+      expect(lastID).toEqual(1);
     });
   });
 
   describe("getFirst", () => {
     beforeEach(async () => {
       await db.applyMigrationScripts(migrationDirectory);
-      await insertUserTestData(db);
+      await insertTestPayees(db);
     });
 
     test("should get first row matching query", async () => {
       const result = await db.getFirst(
-        "select full_name from user where full_name = 'Jonas Gunnarsen'"
+        "select * from payees where name = 'Test payee 2'"
       );
 
-      expect(result.full_name).toEqual("Jonas Gunnarsen");
+      expect(result.id).toEqual(2);
     });
 
     test("should get first row matching query when using parameters", async () => {
       const result = await db.getFirst(
-        "select full_name from user where full_name = (?)",
-        ["Jonas Gunnarsen"]
+        "select * from payees where name = (?)",
+        ["Test payee 2"]
       );
 
-      expect(result.full_name).toEqual("Jonas Gunnarsen");
+      expect(result.name).toEqual("Test payee 2");
     });
 
     test("should return null when no rows match query", async () => {
       const result = await db.getFirst(
-        "select full_name from user where full_name = 'McMillan'"
+        "select name from payees where name = 'Test 3'"
       );
 
       expect(result).toBeNull();
@@ -113,8 +115,8 @@ describe("SqLiteDatabase", () => {
 
     test("should return null when no rows match query using parameters", async () => {
       const result = await db.getFirst(
-        "select full_name from user where full_name = (?)",
-        ["McMillan"]
+        "select name from payees where name = (?)",
+        ["Test 3"]
       );
 
       expect(result).toBeNull();
@@ -124,29 +126,27 @@ describe("SqLiteDatabase", () => {
   describe("getAll", () => {
     beforeEach(async () => {
       await db.applyMigrationScripts(migrationDirectory);
-      await insertUserTestData(db);
+      await insertTestPayees(db);
     });
 
     test("should get all rows matching query", async () => {
-      const results = await db.getAll(
-        "select full_name from user where id < 4"
-      );
+      const results = await db.getAll("select name from payees where id < 4");
 
-      expect(results.length).toEqual(3);
+      expect(results.length).toEqual(2);
     });
 
     test("should get all rows matching query when using parameters", async () => {
       const results = await db.getAll(
-        "select full_name from user where id < (?)",
-        ["4"]
+        "select name from payees where id < (?)",
+        [4]
       );
 
-      expect(results.length).toEqual(3);
+      expect(results.length).toEqual(2);
     });
 
     test("should return empty array when no rows match query", async () => {
       const results = await db.getAll(
-        "select full_name from user where full_name = 'McMillan'"
+        "select name from payees where name = 'McMillan'"
       );
 
       expect(results).toEqual([]);
@@ -154,7 +154,7 @@ describe("SqLiteDatabase", () => {
 
     test("should return empty array when no rows match query when using parameters", async () => {
       const results = await db.getAll(
-        "select full_name from user where full_name = (?)",
+        "select name from payees where name = (?)",
         ["McMillan"]
       );
 
